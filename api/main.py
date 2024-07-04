@@ -1,7 +1,7 @@
 import sys
-sys.path.insert(0, 'D:\Swinburne_study\Year2\semester3\COS30018\Project\model')
+sys.path.insert(0, 'D:\Swinburne_study\Year2\semester3\COS30018\Project\source')
 
-from model import HierarchialVAE, Denoise_net, Encoder_Block, Decoder_Block, DiffusionProcess
+from source import HierarchialVAE, Denoise_net, Encoder_Block, Decoder_Block, DiffusionProcess
 
 
 import os
@@ -50,7 +50,7 @@ class StockDataset(Dataset):
 # denoise_checkpoint = torch.load('../model/denoise_checkpoint_amazon.pt')
 
 # Define the directory containing the checkpoint files
-checkpoint_dir = '../model'
+checkpoint_dir = '../source'
 
 # Define lists to hold the loaded models and dataloaders
 vae_checkpoints = {}
