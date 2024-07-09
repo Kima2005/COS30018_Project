@@ -4,6 +4,8 @@ var ctx = document.getElementById("chart").getContext("2d");
 
 var barData = [];
 var lineData = [];
+let dateArray = []
+let predictionLineData = [];
 
 fetchCSVData("Amazon");
 
@@ -14,13 +16,20 @@ var chart = new Chart(ctx, {
             {
                 label: "Amazon Stock Data",
                 data: barData,
+                hidden: true,
             },
             {
                 label: "Close price",
                 type: "line",
                 data: lineData,
-                hidden: true,
             },
+
+            // prediction
+            {
+                label: "Prediction close price",
+                type: "line",
+                data: lineData,
+            }
         ],
     },
 
@@ -52,9 +61,10 @@ var chart = new Chart(ctx, {
 async function fetchCSVData(name) {
     barData = [];
     lineData = [];
+    dateArray = [];
+    predictionLineData = [];
 
-    // const response = await fetch(prefixName(name));
-    const response = await fetch("http://127.0.0.1:8000/predict", {
+    const predict_res = fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         headers: {
             'Accept': 'application/json',
@@ -63,8 +73,7 @@ async function fetchCSVData(name) {
         body: JSON.stringify({ filename: name })
     });
 
-    console.log(await response.json())
-    return;
+    const response = await fetch(prefixName(name));
     const data = await response.text();
     const parsedData = parseCSV(data);
 
@@ -76,6 +85,7 @@ async function fetchCSVData(name) {
             "yyyy-MM-dd"
         ).valueOf();
 
+        dateArray.push(date)
         barData.push({
             x: date,
             o: parseFloat(row.Open),
@@ -97,6 +107,22 @@ async function fetchCSVData(name) {
     chart.canvas.parentNode.style.width = "80vw";
 
     chart.update();
+
+    // Assume that predict data is loaded too slow
+    await predict_res.then((data) => {
+        return data.json()
+    }).then((d) => {console.log(d)
+        const data = d.predictions;
+        for (let index = 0; index < dateArray.length; index++) {
+            predictionLineData.push({
+                x: dateArray[index],
+                y: data[index] ?? 0,
+            });
+        }
+
+        chart.config.data.datasets[2].data = predictionLineData;
+        chart.update()
+    }).catch(err => console.log(err))
 }
 
 function parseCSV(data) {

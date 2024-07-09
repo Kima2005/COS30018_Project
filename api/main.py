@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, 'D:\Swinburne_study\Year2\semester3\COS30018\Project\source')
 
-from source import HierarchialVAE, Denoise_net, Encoder_Block, Decoder_Block, DiffusionProcess
+from model import HierarchialVAE, Denoise_net, Encoder_Block, Decoder_Block, DiffusionProcess
 
 
 import os
@@ -82,11 +82,6 @@ Diffusion_Process = DiffusionProcess(num_diff_steps = 10, vae = VAE, beta_start 
 Denoise_Net = Denoise_net(in_channels = 16,dim = 16, size = 5)
 
 
-# VAE.load_state_dict(vae_checkpoint)
-# Denoise_Net.load_state_dict(denoise_checkpoint)
-
-# VAE.eval()
-# Denoise_Net.eval()
 
 
 @app.get("/")
@@ -95,16 +90,19 @@ def read_root():
 
 # CORS: *
 num_diff_steps = 10
+file_map = {
+    "Amazon": "./Amazon_final.csv",
+    "Apple": "./Apple_final.csv",
+    "Google": "./Google_final.csv",
+    "Microsoft": "./Microsoft_final.csv",
+    "Netflix": "./Netflix_final.csv"
+}
+
+
 
 @app.post("/predict")
 async def predict(input: Filename):
-    file_map = {
-        "Amazon": "./Amazon_final.csv",
-        "Apple": "./Apple_final.csv",
-        "Google": "./Google_final.csv",
-        "Microsoft": "./Microsoft_final.csv",
-        "Netflix": "./Netflix_final.csv"
-    }
+
     if input.filename not in file_map:
         raise HTTPException(status_code=400, detail="Invalid file name.")
 
@@ -161,7 +159,7 @@ async def predict(input: Filename):
     predcont_seq = [item.item() for sublist in predcont_seq for item in sublist]
 
     # denorm_tar = stock['close'][6+5:len(tarcont_seq)+11]*tarcont_seq
-    denorm_pred = stock['close'][6+5:len(tarcont_seq)+11]*predcont_seq
+    denorm_pred = stock['Close'][6+5:len(tarcont_seq)+11]*predcont_seq
     return {"predictions": denorm_pred}
             # "target": denorm_tar}
 
