@@ -1,7 +1,5 @@
 import time as time2
-
 from source.model import HierarchialVAE, Denoise_net, Encoder_Block, Decoder_Block, DiffusionProcess
-
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
@@ -42,11 +40,7 @@ class StockDataset(Dataset):
         output = torch.Tensor(output)
 
         return input, output
-
-# entire_dataloader = torch.load('entire_dataloader.pth')
-# vae_checkpoint = torch.load('../model/vae_checkpoint_amazon.pt')
-# denoise_checkpoint = torch.load('../model/denoise_checkpoint_amazon.pt')
-
+    
 # Define the directory containing the checkpoint files
 checkpoint_dir = './source'
 
@@ -89,11 +83,11 @@ def read_root():
 # CORS: *
 num_diff_steps = 10
 file_map = {
-    "Amazon": "./Amazon_final.csv",
-    "Apple": "./Apple_final.csv",
-    "Google": "./Google_final.csv",
-    "Microsoft": "./Microsoft_final.csv",
-    "Netflix": "./Netflix_final.csv"
+    "Amazon": "./data/Amazon_final.csv",
+    "Apple": "./data/Apple_final.csv",
+    "Google": "./data/Google_final.csv",
+    "Microsoft": "./data/Microsoft_final.csv",
+    "Netflix": "./data/Netflix_final.csv"
 }
 
 
