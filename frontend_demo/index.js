@@ -178,6 +178,7 @@ async function fetchCSVData(name) {
         return data.json();
     }).then((d) => {
         const data = d.predictions;
+        console.log(data)
         for (let index = 0; index < dateArray.length; index++) {
             const prediction = data[index] ?? 0;
 
@@ -188,10 +189,11 @@ async function fetchCSVData(name) {
                 });
             }
 
+            // console.log(lineData)
             // Set close price to zero if prediction is zero
-            if (prediction === 0) {
-                lineData[index].y = 0;
-            }
+            // if (prediction === 0) {
+            //     lineData[index].y = 0;
+            // }
         }
 
         // Filter out zero values from lineData

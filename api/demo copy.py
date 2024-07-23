@@ -145,142 +145,145 @@ file_map = {
 }
 
 
-
+import random
 @app.post("/predict")
 async def predict(input: Filename):
+    print("predict" +input)
     start_time = time2.time()
     if input.filename not in file_map:
         raise HTTPException(status_code=400, detail="Invalid file name.")
 
 
-    vae_state_dict = vae_checkpoints.get(input.filename.lower())
-    denoise_state_dict = denoise_checkpoints.get(input.filename.lower())
-    VAE.load_state_dict(vae_state_dict)
-    Denoise_Net.load_state_dict(denoise_state_dict)
-    VAE.eval()
-    Denoise_Net.eval()
-    entire_dataloader = dataloaders.get(input.filename.lower())
+    # vae_state_dict = vae_checkpoints.get(input.filename.lower())
+    # denoise_state_dict = denoise_checkpoints.get(input.filename.lower())
+    # VAE.load_state_dict(vae_state_dict)
+    # Denoise_Net.load_state_dict(denoise_state_dict)
+    # VAE.eval()
+    # Denoise_Net.eval()
+    # entire_dataloader = dataloaders.get(input.filename.lower())
 
-    stock = pd.read_csv(file_map[input.filename])
-    predicted_seq=[]
-    inp_seq=[]
-    tar=[]
+    # stock = pd.read_csv(file_map[input.filename])
+    # predicted_seq=[]
+    # inp_seq=[]
+    # tar=[]
 
-    for i,(x,y) in enumerate(entire_dataloader):
-        if(x.size(0)!=16):
-            break
-        vae_out = torch.zeros((y.size(0), y.size(1),num_diff_steps))
-        diff_out = torch.zeros((y.size(0), y.size(1),num_diff_steps))
-        for time in range(1,num_diff_steps + 1):
-            output, y_noisy = Diffusion_Process.diffuse(x,y,time)
-            vae_out[:,:,time-1] = output
-            diff_out[:,:,time-1] = y_noisy
-        y_nn=vae_out[:,:,:]
-        E = Denoise_Net(y_nn).sum()
-        grad_x = torch.autograd.grad(E, y_nn, create_graph=True)[0]
-        mean_vae = torch.mean(vae_out, dim = 2)
-        inp_seq.append(x)
-        predicted_seq.append(mean_vae - 0.1*torch.mean(grad_x,dim=2))
-        tar.append(y)
+    # for i,(x,y) in enumerate(entire_dataloader):
+    #     if(x.size(0)!=16):
+    #         break
+    #     vae_out = torch.zeros((y.size(0), y.size(1),num_diff_steps))
+    #     diff_out = torch.zeros((y.size(0), y.size(1),num_diff_steps))
+    #     for time in range(1,num_diff_steps + 1):
+    #         output, y_noisy = Diffusion_Process.diffuse(x,y,time)
+    #         vae_out[:,:,time-1] = output
+    #         diff_out[:,:,time-1] = y_noisy
+    #     y_nn=vae_out[:,:,:]
+    #     E = Denoise_Net(y_nn).sum()
+    #     grad_x = torch.autograd.grad(E, y_nn, create_graph=True)[0]
+    #     mean_vae = torch.mean(vae_out, dim = 2)
+    #     inp_seq.append(x)
+    #     predicted_seq.append(mean_vae - 0.1*torch.mean(grad_x,dim=2))
+    #     tar.append(y)
 
-    # print(predicted_seq[:10])
-    target_sequence=[]
-    for i in range (0,len(tar)):
-        for j in range(0,16):
-            target_sequence.append(tar[i][j])
-    pred_sequence=[]
-    for i in range(0,len(predicted_seq)):
-        for j in range(0,16):
-            pred_sequence.append(predicted_seq[i][j])
-    # print(pred_sequence[:10])
+    # # print(predicted_seq[:10])
+    # target_sequence=[]
+    # for i in range (0,len(tar)):
+    #     for j in range(0,16):
+    #         target_sequence.append(tar[i][j])
+    # pred_sequence=[]
+    # for i in range(0,len(predicted_seq)):
+    #     for j in range(0,16):
+    #         pred_sequence.append(predicted_seq[i][j])
+    # # print(pred_sequence[:10])
 
-    tarcont_seq=[]
-    for i in range(0,len(target_sequence)):
-        if(i%5==0):
-            tarcont_seq.append(target_sequence[i])
-    tarcont_seq = [item.item() for sublist in tarcont_seq for item in sublist]
-    predcont_seq=[]
-    for i in range(0,len(pred_sequence)):
-        if(i%5==0):
-            predcont_seq.append(pred_sequence[i])
-    predcont_seq = [item.item() for sublist in predcont_seq for item in sublist]
+    # tarcont_seq=[]
+    # for i in range(0,len(target_sequence)):
+    #     if(i%5==0):
+    #         tarcont_seq.append(target_sequence[i])
+    # tarcont_seq = [item.item() for sublist in tarcont_seq for item in sublist]
+    # predcont_seq=[]
+    # for i in range(0,len(pred_sequence)):
+    #     if(i%5==0):
+    #         predcont_seq.append(pred_sequence[i])
+    # predcont_seq = [item.item() for sublist in predcont_seq for item in sublist]
     
-    # denorm_tar = stock['close'][6+5:len(tarcont_seq)+11]*tarcont_seq
-    denorm_pred = stock['Close'][6+5:len(tarcont_seq)+11]*predcont_seq
-    print("--- %s seconds ---" % (time2.time() - start_time))
-    print(denorm_pred)
-    return {"predictions": denorm_pred}
+    # # denorm_tar = stock['close'][6+5:len(tarcont_seq)+11]*tarcont_seq
+    # denorm_pred = stock['Close'][6+5:len(tarcont_seq)+11]*predcont_seq
+    # print("--- %s seconds ---" % (time2.time() - start_time))
+    # print(denorm_pred)
+    # return {"predictions": denorm_pred}
+    return {"predictions": [random.random() for _ in range(11)]}
             # "target": denorm_tar}
 
 
 
 @app.post("/predict2")
 async def predict2(input: Filename):
-    start_time = time2.time()
-    if input.filename not in file_map:
-        raise HTTPException(status_code=400, detail="Invalid file name.")
+    print("predict2" + input)
+    # start_time = time2.time()
+    # if input.filename not in file_map:
+    #     raise HTTPException(status_code=400, detail="Invalid file name.")
 
-    G_model = Wgan_model.get(input.filename.lower())
-    y_test = y_test_load.get(input.filename.lower())
-    X_test = X_test_load.get(input.filename.lower())
-    X_train = X_train_load.get(input.filename.lower())
-    y_train = y_train_load.get(input.filename.lower())
-    y_scaler = y_scaler_load.get(input.filename.lower())
-    index_test = index_test_load.get(input.filename.lower())
-    index_train = index_train_load.get(input.filename.lower())
-    print("FUCKKKKKKKKKKKKKKKKKK")
-    print(y_test)
-    print(y_test_load)
-    print(input.filename.lower())
-    # Set output steps
-    output_dim = y_test.shape[1]
+    # G_model = Wgan_model.get(input.filename.lower())
+    # y_test = y_test_load.get(input.filename.lower())
+    # X_test = X_test_load.get(input.filename.lower())
+    # X_train = X_train_load.get(input.filename.lower())
+    # y_train = y_train_load.get(input.filename.lower())
+    # y_scaler = y_scaler_load.get(input.filename.lower())
+    # index_test = index_test_load.get(input.filename.lower())
+    # index_train = index_train_load.get(input.filename.lower())
+    # print("FUCKKKKKKKKKKKKKKKKKK")
+    # print(y_test)
+    # print(y_test_load)
+    # print(input.filename.lower())
+    # # Set output steps
+    # output_dim = y_test.shape[1]
 
-    # Get predicted data
-    y_predicted = G_model(X_test)
-    y_train_predicted = G_model(X_train)
-    rescaled_real_y = y_scaler.inverse_transform(y_test)
-    rescaled_predicted_y = y_scaler.inverse_transform(y_predicted)
+    # # Get predicted data
+    # y_predicted = G_model(X_test)
+    # y_train_predicted = G_model(X_train)
+    # rescaled_real_y = y_scaler.inverse_transform(y_test)
+    # rescaled_predicted_y = y_scaler.inverse_transform(y_predicted)
 
-    rescaled_real_y_train = y_scaler.inverse_transform(y_train)
-    rescaled_predicted_y_train = y_scaler.inverse_transform(y_train_predicted)
+    # rescaled_real_y_train = y_scaler.inverse_transform(y_train)
+    # rescaled_predicted_y_train = y_scaler.inverse_transform(y_train_predicted)
 
-    predict_result = pd.DataFrame()
-    for i in range(rescaled_predicted_y.shape[0]):
-        y_predict = pd.DataFrame(rescaled_predicted_y[i], columns=["predicted_price"],
-                                 index=index_test[i:i + output_dim])
-        predict_result = pd.concat([predict_result, y_predict], axis=1, sort=False)
+    # predict_result = pd.DataFrame()
+    # for i in range(rescaled_predicted_y.shape[0]):
+    #     y_predict = pd.DataFrame(rescaled_predicted_y[i], columns=["predicted_price"],
+    #                              index=index_test[i:i + output_dim])
+    #     predict_result = pd.concat([predict_result, y_predict], axis=1, sort=False)
 
-    ## Real price
-    real_price = pd.DataFrame()
-    for i in range(rescaled_real_y.shape[0]):
-        y_train = pd.DataFrame(rescaled_real_y[i], columns=["real_price"], index=index_test[i:i + output_dim])
-        real_price = pd.concat([real_price, y_train], axis=1, sort=False)
+    # ## Real price
+    # real_price = pd.DataFrame()
+    # for i in range(rescaled_real_y.shape[0]):
+    #     y_train = pd.DataFrame(rescaled_real_y[i], columns=["real_price"], index=index_test[i:i + output_dim])
+    #     real_price = pd.concat([real_price, y_train], axis=1, sort=False)
 
-    predict_result['predicted_mean'] = predict_result.mean(axis=1)
-    real_price['real_mean'] = real_price.mean(axis=1)
+    # predict_result['predicted_mean'] = predict_result.mean(axis=1)
+    # real_price['real_mean'] = real_price.mean(axis=1)
 
-    predict_result_train = pd.DataFrame()
-    for i in range(rescaled_predicted_y_train.shape[0]):
-        y_predict = pd.DataFrame(rescaled_predicted_y_train[i], columns=["predicted_price"], index=index_train[i:i+output_dim])
-        predict_result_train = pd.concat([predict_result_train, y_predict], axis=1, sort=False)
+    # predict_result_train = pd.DataFrame()
+    # for i in range(rescaled_predicted_y_train.shape[0]):
+    #     y_predict = pd.DataFrame(rescaled_predicted_y_train[i], columns=["predicted_price"], index=index_train[i:i+output_dim])
+    #     predict_result_train = pd.concat([predict_result_train, y_predict], axis=1, sort=False)
 
-    real_price_train = pd.DataFrame()
-    for i in range(rescaled_real_y_train.shape[0]):
-        y_train = pd.DataFrame(rescaled_real_y_train[i], columns=["real_price"], index=index_train[i:i+output_dim])
-        real_price_train = pd.concat([real_price_train, y_train], axis=1, sort=False)
+    # real_price_train = pd.DataFrame()
+    # for i in range(rescaled_real_y_train.shape[0]):
+    #     y_train = pd.DataFrame(rescaled_real_y_train[i], columns=["real_price"], index=index_train[i:i+output_dim])
+    #     real_price_train = pd.concat([real_price_train, y_train], axis=1, sort=False)
 
-    predict_result_train['predicted_mean'] = predict_result_train.mean(axis=1)
-    real_price_train['real_mean'] = real_price_train.mean(axis=1)
+    # predict_result_train['predicted_mean'] = predict_result_train.mean(axis=1)
+    # real_price_train['real_mean'] = real_price_train.mean(axis=1)
 
-    predict_final = pd.concat([predict_result_train['predicted_mean'], predict_result['predicted_mean']], axis=0)
-    # real_final = pd.concat([real_price_train['real_mean'], real_price['real_mean']], axis=0)
+    # predict_final = pd.concat([predict_result_train['predicted_mean'], predict_result['predicted_mean']], axis=0)
+    # # real_final = pd.concat([real_price_train['real_mean'], real_price['real_mean']], axis=0)
 
 
-    print(predict_final)
+    # print(predict_final)
     
 
 
-    return {"predictions": predict_final.tolist()}
+    return {"predictions": [random.random() for _ in range(11)]}
             # "target": denorm_tar}
 
 
