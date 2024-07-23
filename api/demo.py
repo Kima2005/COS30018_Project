@@ -57,8 +57,7 @@ dataloaders = {}
 # List of sources to loop through
 sources = ['amazon', 'apple', 'gg', 'meta', 'netflix']
 
-# List of sources to loop through
-sources2 = [ 'gg']
+
 
 # Load VAE and denoise checkpoints
 for source in sources:
@@ -82,39 +81,39 @@ Denoise_Net = Denoise_net(in_channels = 16,dim = 16, size = 5)
 
 # Load WGAN model ########################3
 Wgan_model ={}
-index_test = {}
-index_train = {}
+index_test_load = {}
+index_train_load = {}
 # X_scaler = {}
-X_test = {}
-X_train = {}
-y_scaler = {}
-y_test = {}
-y_train = {}
+X_test_load = {}
+X_train_load = {}
+y_scaler_load = {}
+y_test_load = {}
+y_train_load = {}
 
 # Load 
-for source in sources2:
+for source in sources:
     wgan_path = os.path.join(checkpoint_dir2, f'WGAN_{source}.keras')
     print(wgan_path)
     Wgan_model[source] =  tf.keras.models.load_model(wgan_path)
 
-for source in sources2:
+for source in sources:
     index_test_path = os.path.join(checkpoint_dir2, f'index_test_{source}.npy')
-    index_test[source] = np.load(index_test_path, allow_pickle=True)
+    index_test_load[source] = np.load(index_test_path, allow_pickle=True)
     
     index_train_path = os.path.join(checkpoint_dir2, f'index_train_{source}.npy')
-    index_train[source] = np.load(index_train_path, allow_pickle=True)
+    index_train_load[source] = np.load(index_train_path, allow_pickle=True)
     
     x_test_path = os.path.join(checkpoint_dir2, f'X_test_{source}.npy')
-    X_test[source] = np.load(x_test_path, allow_pickle=True)
+    X_test_load[source] = np.load(x_test_path, allow_pickle=True)
     
     x_train_path = os.path.join(checkpoint_dir2, f'X_train_{source}.npy')
-    X_train[source] = np.load(x_train_path, allow_pickle=True)
+    X_train_load[source] = np.load(x_train_path, allow_pickle=True)
     
     y_test_path = os.path.join(checkpoint_dir2, f'y_test_{source}.npy')
-    y_test[source] = np.load(y_test_path, allow_pickle=True)
+    y_test_load[source] = np.load(y_test_path, allow_pickle=True)
     
     y_train_path = os.path.join(checkpoint_dir2, f'y_train_{source}.npy')
-    y_train[source] = np.load(y_train_path, allow_pickle=True)
+    y_train_load[source] = np.load(y_train_path, allow_pickle=True)
 
     
     # X_scaler_path = os.path.join(checkpoint_dir2, f'X_scaler{source}.npy')
@@ -122,7 +121,7 @@ for source in sources2:
 
         
     y_scaler_path = os.path.join(checkpoint_dir2, f'y_scaler_{source}.pkl')
-    y_scaler[source] = load(open(y_scaler_path, 'rb'))
+    y_scaler_load[source] = load(open(y_scaler_path, 'rb'))
 
 
 
@@ -209,6 +208,7 @@ async def predict(input: Filename):
     # denorm_tar = stock['close'][6+5:len(tarcont_seq)+11]*tarcont_seq
     denorm_pred = stock['Close'][6+5:len(tarcont_seq)+11]*predcont_seq
     print("--- %s seconds ---" % (time2.time() - start_time))
+    print(denorm_pred)
     return {"predictions": denorm_pred}
             # "target": denorm_tar}
 
@@ -221,15 +221,17 @@ async def predict2(input: Filename):
         raise HTTPException(status_code=400, detail="Invalid file name.")
 
     G_model = Wgan_model.get(input.filename.lower())
-    y_test = y_test.get(input.filename.lower())
-    X_test = X_test.get(input.filename.lower())
-    X_train = X_train.get(input.filename.lower())
-    y_train = y_train.get(input.filename.lower())
-    y_scaler = y_scaler.get(input.filename.lower())
-    index_test = index_test.get(input.filename.lower())
-    index_train = index_train.get(input.filename.lower())
-
-
+    y_test = y_test_load.get(input.filename.lower())
+    X_test = X_test_load.get(input.filename.lower())
+    X_train = X_train_load.get(input.filename.lower())
+    y_train = y_train_load.get(input.filename.lower())
+    y_scaler = y_scaler_load.get(input.filename.lower())
+    index_test = index_test_load.get(input.filename.lower())
+    index_train = index_train_load.get(input.filename.lower())
+    print("FUCKKKKKKKKKKKKKKKKKK")
+    print(y_test)
+    print(y_test_load)
+    print(input.filename.lower())
     # Set output steps
     output_dim = y_test.shape[1]
 
@@ -274,12 +276,11 @@ async def predict2(input: Filename):
     # real_final = pd.concat([real_price_train['real_mean'], real_price['real_mean']], axis=0)
 
 
+    print(predict_final)
+    
 
 
-
-
-   
-    return {"predictions": predict_final}
+    return {"predictions": predict_final.tolist()}
             # "target": denorm_tar}
 
 

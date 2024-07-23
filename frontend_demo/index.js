@@ -6,124 +6,9 @@ var barData = [];
 var lineData = [];
 let dateArray = []
 let predictionLineData = [];
+let predictionLineData2 = [];
 
 fetchCSVData("Amazon");
-
-// var chart = new Chart(ctx, {
-//     type: "candlestick",
-//     data: {
-//         datasets: [
-//             {
-//                 label: "Amazon Stock Data",
-//                 data: barData,
-//                 hidden: true,
-//             },
-//             {
-//                 label: "Close price",
-//                 type: "line",
-//                 data: lineData,
-//             },
-
-//             // prediction
-//             {
-//                 label: "Prediction close price",
-//                 type: "line",
-//                 data: lineData,
-//             }
-//         ],
-//     },
-
-//     options: {
-//         plugins: {
-//             zoom: {
-//                 zoom: {
-//                     wheel: {
-//                         enabled: true,
-//                         speed: 0.2,
-//                     },
-//                     pinch: {
-//                         enabled: true,
-//                     },
-//                     mode: "x",
-//                     speed: 0.2,
-//                 },
-
-//                 pan: {
-//                     enabled: true,
-//                     mode: "x",
-//                     threshold: 2,
-//                 },
-//             },
-//         },
-//     },
-// });
-
-// async function fetchCSVData(name) {
-//     barData = [];
-//     lineData = [];
-//     dateArray = [];
-//     predictionLineData = [];
-
-//     const predict_res = fetch("http://127.0.0.1:8000/predict", {
-//         method: "POST",
-//         headers: {
-//             'Accept': 'application/json',
-//             'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify({ filename: name })
-//     });
-
-//     const response = await fetch(prefixName(name));
-//     const data = await response.text();
-//     const parsedData = parseCSV(data);
-
-//     parsedData.forEach((row) => {
-//         if (row.Date === undefined) return;
-
-//         const date = luxon.DateTime.fromFormat(
-//             row.Date,
-//             "yyyy-MM-dd"
-//         ).valueOf();
-
-//         dateArray.push(date)
-//         barData.push({
-//             x: date,
-//             o: parseFloat(row.Open),
-//             h: parseFloat(row.High),
-//             l: parseFloat(row.Low),
-//             c: parseFloat(row.Close),
-//         });
-
-//         lineData.push({
-//             x: date,
-//             y: parseFloat(row.Close),
-//         });
-//     });
-
-//     chart.config.data.datasets[0].data = barData;
-//     chart.config.data.datasets[1].data = lineData;
-//     chart.config.data.datasets[0].label = stockData(name);
-//     chart.canvas.parentNode.style.height = "80vh";
-//     chart.canvas.parentNode.style.width = "80vw";
-
-//     chart.update();
-
-//     // Assume that predict data is loaded too slow
-//     await predict_res.then((data) => {
-//         return data.json()
-//     }).then((d) => {console.log(d)
-//         const data = d.predictions;
-//         for (let index = 0; index < dateArray.length; index++) {
-//             predictionLineData.push({
-//                 x: dateArray[index],
-//                 y: data[index] ?? 0,
-//             });
-//         }
-
-//         chart.config.data.datasets[2].data = predictionLineData;
-//         chart.update()
-//     }).catch(err => console.log(err))
-// }
 
 var chart = new Chart(ctx, {
     type: "candlestick",
@@ -145,6 +30,13 @@ var chart = new Chart(ctx, {
                 label: "Prediction close price",
                 type: "line",
                 data: predictionLineData,
+            },
+
+            // prediction 2
+            {
+                label: "Prediction close price 2",
+                type: "line",
+                data: predictionLineData2,
             }
         ],
     },
@@ -199,8 +91,18 @@ async function fetchCSVData(name) {
     lineData = [];
     dateArray = [];
     predictionLineData = [];
+    predictionLineData2 = [];
 
     const predict_res = fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filename: name })
+    });
+
+    const predict_res2 = fetch("http://127.0.0.1:8000/predict2", {
         method: "POST",
         headers: {
             'Accept': 'application/json',
@@ -269,6 +171,34 @@ async function fetchCSVData(name) {
 
         chart.config.data.datasets[1].data = lineData;
         chart.config.data.datasets[2].data = predictionLineData;
+        chart.update();
+    }).catch(err => console.log(err));
+
+    await predict_res2.then((data) => {
+        return data.json();
+    }).then((d) => {
+        const data = d.predictions;
+        for (let index = 0; index < dateArray.length; index++) {
+            const prediction = data[index] ?? 0;
+
+            if (prediction !== 0) {
+                predictionLineData2.push({
+                    x: dateArray[index],
+                    y: prediction,
+                });
+            }
+
+            // Set close price to zero if prediction is zero
+            if (prediction === 0) {
+                lineData[index].y = 0;
+            }
+        }
+
+        // Filter out zero values from lineData
+        lineData = lineData.filter(dataPoint => dataPoint.y !== 0);
+
+        chart.config.data.datasets[1].data = lineData;
+        chart.config.data.datasets[3].data = predictionLineData2;
         chart.update();
     }).catch(err => console.log(err));
 }
