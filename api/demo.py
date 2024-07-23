@@ -121,7 +121,7 @@ for source in sources2:
     # X_scaler[source] = load(open(X_scaler_path, 'rb'))
 
         
-    y_scaler_path = os.path.join(checkpoint_dir2, f'X_scaler{source}.npy')
+    y_scaler_path = os.path.join(checkpoint_dir2, f'y_scaler_{source}.pkl')
     y_scaler[source] = load(open(y_scaler_path, 'rb'))
 
 
